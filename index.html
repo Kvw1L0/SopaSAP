@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sopa de Letras Musical</title>
+<style>
+:root {
+--electric-blue: #03DAC6;
+--glowing-border: #00A1E0;
+--found-word: #90EE90; /* Verde claro /
+--selected-cell: #ADD8E6; / Azul claro */
+--dark-background: #1A1A2E;
+--light-text: #FFFFFF;
+--cell-border: #444;
+}
+
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: var(--dark-background);
+        margin: 0;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--light-text);
+    }
+
+    h1 {
+        font-size: 36px;
+        margin-bottom: 30px;
+        color: var(--electric-blue);
+        text-shadow: 0 0 10px var(--electric-blue);
+    }
+
+    #container {
+        display: flex;
+        flex-direction: row;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    #board-container {
+        background: rgba(26, 26, 46, 0.8);
+        padding: 20px;
+        border-radius: 16px;
+        border: 3px solid var(--glowing-border);
+        box-shadow: 0 0 15px var(--glowing-border);
+        transition: border-color 0.6s ease, box-shadow 0.6s ease;
+    }
+
+    #board-container.win {
+        border-color: gold;
+        box-shadow: 0 0 20px 5px gold;
+    }
+
+    #board {
+        display: grid;
+        grid-template-columns: repeat(7, 48px);
+        grid-template-rows: repeat(7, 48px);
+        gap: 6px;
+    }
+
+    .cell {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        font-weight: 600;
+        background: #222;
+        border-radius: 6px;
+        border: 2px solid var(--cell-border);
+        user-select: none;
+        touch-action: none;
+        cursor: pointer;
+        color: var(--light-text);
+        transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .cell:hover {
+        box-shadow: 0 0 5px var(--glowing-border);
+    }
+
+    .selected {
+        background: var(--selected-cell);
+        color: #333;
+        border-color: var(--glowing-border);
+    }
+
+    .found {
+        background: var(--found-word) !important;
+        color: #1a1a1a;
+        border-color: var(--found-word) !important;
+    }
+
+    #word-list {
+        font-size: 18px;
+        padding: 20px;
+        background: rgba(26, 26, 46, 0.8);
+        border-radius: 16px;
+        border: 1px solid var(--glowing-border);
+        min-width: 160px;
+        box-shadow: 0 0 10px var(--glowing-border);
+    }
+
+    #word-list li {
+        margin-bottom: 10px;
+        list-style: none;
+    }
+
+    #word-list li.found-word {
+        text-decoration: line-through;
+        color: #888;
+    }
+
+    #buttons {
+        margin-top: 25px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background: #0077cc; /* Azul SAP */
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s, box-shadow 0.3s;
+        box-shadow: 0 0 8px #0077cc;
+    }
+
+    button:hover {
+        background: #005fa3;
+        box-shadow: 0 0 12px #005fa3;
+    }
+
+    #message {
+        margin-top: 20px;
+        font-size: 26px;
+        font-weight: bold;
+        color: var(--found-word);
+        display: none;
+        animation: pop 0.6s ease;
+    }
+
+    @keyframes pop {
+        0% { transform: scale(0.7); opacity: 0; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+
+    @media (max-width: 768px) {
+        #container {
+            flex-direction: column;
+            align-items: center;
+        }
+        #board {
+            grid-template-columns: repeat(7, minmax(36px, 1fr));
+            grid-template-rows: repeat(7, minmax(36px, 1fr));
+            gap: 4px;
+        }
+        .cell {
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+        }
+        #word-list {
+            margin-top: 20px;
+            min-width: auto;
+            width: 90%;
+        }
+        #buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            width: 100%;
+            max-width: 220px;
+        }
+    }
+</style>
+</head>
+<body>
+<h1>Sopa de Letras Musical</h1>
+<textarea id="words-source" style="display:none;">RITMO
+GUITARRA
+MELODIA
+NOTA
+CANCION
+ACORDE
+ARMONIA</textarea>
+<div id="container">
+<div>
+<div id="board-container">
+<div id="board"></div>
+</div>
+<div id="buttons">
+<button onclick="captureBoard()">📸 Capturar</button>
+<button onclick="sendToWhatsApp()">📲 Enviar por WhatsApp</button>
+</div>
+<div id="message">🎉 ¡Encontraste todas las palabras! 🎉</div>
+</div>
+<ul id="word-list"></ul>
+</div>
+
+<script src="[https://html2canvas.hertzen.com/dist/html2canvas.min.js](https://html2canvas.hertzen.com/dist/html2canvas.min.js)"></script>
+<script src="[https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js](https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js)"></script>
+<script>
+    let words = [];
+    const confettiLauncher = confetti.create(document.body, { resize: true, useWorker: true });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const raw = document.getElementById("words-source").value;
+        words = raw.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
+        initGame();
+    });
+
+    function initGame() {
+        const gridSize = 7;
+        const board = document.getElementById("board");
+        const wordList = document.getElementById("word-list");
+        const foundWords = new Set();
+        const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
+        let path = [];
+
+        function updateWordList() {
+            wordList.innerHTML = "";
+            words.forEach(word => {
+                const li = document.createElement("li");
+                li.textContent = word;
+                li.id = `word-${word}`;
+                if (foundWords.has(word)) li.classList.add("found-word");
+                wordList.appendChild(li);
+            });
+        }
+
+        function placeWord(word) {
+            const directions = [[1,0],[0,1],[1,1],[-1,1]];
+            directions.sort(() => Math.random() - 0.5);
+            for (let [dx, dy] of directions) {
+                for (let y = 0; y < gridSize; y++) {
+                    for (let x = 0; x < gridSize; x++) {
+                        let valid = true;
+                        for (let i = 0; i < word.length; i++) {
+                            let nx = x + dx * i;
+                            let ny = y + dy * i;
+                            if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize || (gridCheck(ny, nx) !== "" && gridCheck(ny, nx) !== wordCheck(word, i))) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                        if (valid) {
+                            for (let i = 0; i < word.length; i++) {
+                                let nx = x + dx * i;
+                                let ny = y + dy * i;
+                                gridSet(ny, nx, wordCheck(word, i));
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function gridCheck(y, x) {
+            return grid?.[y]?.[x] || "";
+        }
+
+        function gridSet(y, x, value) {
+            if (grid?.[y]) {
+                grid?.[y][x] = value;
+            }
+        }
+
+        function wordCheck(word, i) {
+            return word?.[i] || "";
+        }
+
+        words.forEach(placeWord);
+        updateWordList();
+
+        board.innerHTML = "";
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                if (gridCheck(y, x) === "") {
+                    gridSet(y, x, String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+                }
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = gridCheck(y, x);
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                cell.addEventListener("click", () => handleClick(cell));
+                board.appendChild(cell);
+            }
+        }
+
+        function resetSelection() {
+            path.forEach(el => el.classList.remove("selected"));
+            path = [];
+        }
+
+        function getWordFromPath() {
+            return path.map(el => el.textContent).join("");
+        }
+
+        function checkWord() {
+            const word = getWordFromPath();
+            if (words.includes(word) && !foundWords.has(word)) {
+                path.forEach(el => el.classList.add("found"));
+                foundWords.add(word);
+                document.getElementById(`word-${word}`).classList.add("found-word");
+                if (foundWords.size === words.length) {
+                    document.getElementById("message").style.display = "block";
+                    document.getElementById("board-container").classList.add("win");
+                    launchConfetti();
+                }
+            }
+            resetSelection();
+        }
+
+        function handleClick(cell) {
+            if (path.includes(cell)) {
+                checkWord();
+                return;
+            }
+            cell.classList.add("selected");
+            path.push(cell);
+            if (words.includes(getWordFromPath())) checkWord();
+        }
+
+        window.captureBoard = function () {
+            html2canvas(document.querySelector("#board")).then(canvas => {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sopa_de_letras_musical.png";
+                    a.click();
+                });
+            });
+        };
+
+        window.sendToWhatsApp = function () {
+            html2canvas(document.querySelector("#board")).then(canvas => {
+                canvas.toBlob(blob => {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const url = `https://wa.me/56986532423?text=¡He resuelto la sopa de letras musical!`;
+                        window.open(url, '_blank');
+                    };
+                    reader.readAsDataURL(blob);
+                });
+            });
+        };
+
+        function launchConfetti() {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, decay: 0.9, gravity: 0.7, particleCount: 50, scalar: 1 };
+
+            function randomConfetti() {
+                const angle = Math.random() * 360;
+                const spread = Math.max(50, Math.random() * 150);
+                return Object.assign({}, defaults, { particleCount: 10 + Math.random() * 20, angle, spread, origin: { x: Math.random(), y: Math.random() - 0.2 } });
+            }
+
+            function frame() {
+                confettiLauncher(randomConfetti());
+                confettiLauncher(Object.assign({}, defaults, { particleCount: 5, origin: { x: Math.random(), y: Math.random() - 0.2 }, colors: ['#0077C6', '#ADD8E6', '#FFFFFF', '#03DAC6'] }));
+
+                if (Date.now() < animationEnd) {
+                    requestAnimationFrame(frame);
+                }
+            }
+            frame();
+        }
+    }
+</script>
+</body>
+</html>
