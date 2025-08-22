@@ -1,383 +1,48 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sopa de Letras Musical</title>
-  <style>
-    :root {
-      --electric-blue: #03DAC6;
-      --glowing-border: #00A1E0;
-      --found-word-bg: #2E8B57; /* Verde Mar oscuro */
-      --selected-cell-bg: #4682B4; /* Azul Acero */
-      --dark-background: #1A1A2E;
-      --glow-color: #E0F7FA; /* Color para todo el texto */
-      --cell-border: #4a5568; /* Borde de celda más sutil */
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--dark-background);
-      background-image: radial-gradient(circle at 50% 50%, #4a2f8c 0%, #1a1a2e 70%);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center; /* Centrado vertical */
-      min-height: 100vh; /* Asegura que el centrado vertical funcione */
-      color: var(--glow-color); /* Color de texto por defecto */
-      box-sizing: border-box;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      margin-bottom: 30px;
-      color: var(--electric-blue);
-      text-shadow: 0 0 10px var(--electric-blue);
-    }
-
-    #container {
-      display: flex;
-      flex-direction: row;
-      gap: 40px;
-      align-items: flex-start; /* Alinea la lista de palabras con la parte superior del tablero */
-      justify-content: center; /* Centrado horizontal del contenido */
-      width: 100%;
-    }
-
-    #board-container {
-      background: rgba(26, 26, 46, 0.8);
-      padding: 20px;
-      border-radius: 16px;
-      border: 3px solid var(--glowing-border);
-      box-shadow: 0 0 15px var(--glowing-border);
-      transition: border-color 0.6s ease, box-shadow 0.6s ease;
-    }
-
-    #board-container.win {
-      border-color: gold;
-      box-shadow: 0 0 20px 5px gold;
-    }
-
-    #board {
-      display: grid;
-      grid-template-columns: repeat(7, 48px);
-      grid-template-rows: repeat(7, 48px);
-      gap: 6px;
-    }
-
-    .cell {
-      width: 48px;
-      height: 48px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 22px;
-      font-weight: 600;
-      background: rgba(0,0,0,0.2);
-      border-radius: 6px;
-      border: 2px solid var(--cell-border);
-      user-select: none;
-      touch-action: none;
-      cursor: pointer;
-      color: var(--glow-color); /* TEXTO VISIBLE */
-      transition: background 0.3s, border-color 0.3s, transform 0.2s;
-    }
-    
-    .cell:active {
-        transform: scale(0.9);
-    }
-
-    .selected {
-      background: var(--selected-cell-bg);
-      border-color: var(--electric-blue);
-    }
-
-    .found {
-      background: var(--found-word-bg) !important;
-      color: white !important;
-      border-color: var(--found-word-bg) !important;
-    }
-
-    #word-list {
-      font-size: 1.2em;
-      padding: 20px;
-      background: rgba(26, 26, 46, 0.8);
-      border-radius: 16px;
-      border: 1px solid var(--glowing-border);
-      min-width: 160px;
-      box-shadow: 0 0 10px var(--glowing-border);
-      margin: 0; /* Reseteo de margen */
-      list-style: none; /* Quitar viñetas */
-    }
-
-    #word-list li {
-      margin-bottom: 10px;
-      color: var(--glow-color); /* TEXTO VISIBLE */
-      transition: color 0.3s;
-    }
-    
-    #word-list li:last-child {
-        margin-bottom: 0;
-    }
-
-    #word-list li.found-word {
-      text-decoration: line-through;
-      color: #888;
-    }
-
-    #buttons {
-      margin-top: 25px;
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      background: #0077cc;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s, box-shadow 0.3s;
-      box-shadow: 0 0 8px #0077cc;
-    }
-    button:hover {
-      background: #005fa3;
-    }
-
-    #message {
-      margin-top: 20px;
-      font-size: 26px;
-      font-weight: bold;
-      color: #28a745;
-      display: none;
-      animation: pop 0.6s ease;
-    }
-    @keyframes pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      50% { transform: scale(1.2); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-
-    @media (max-width: 768px) {
-      body {
-        justify-content: flex-start; /* Alinear al inicio en móvil para mejor scroll */
-        padding: 20px 10px;
-      }
-      #container {
-        flex-direction: column;
-        align-items: center; /* Centrar elementos en la columna */
-        gap: 20px;
-      }
-      #board {
-        grid-template-columns: repeat(7, 1fr); /* Columnas flexibles */
-        grid-template-rows: repeat(7, 1fr);
-        gap: 4px;
-        width: 100%;
-        max-width: 320px;
-      }
-      .cell {
-        width: auto; /* Ancho automático */
-        height: auto;
-        aspect-ratio: 1/1; /* Mantener celdas cuadradas */
-        font-size: 18px;
-      }
-      #word-list {
-        order: -1; /* Mover lista de palabras arriba del tablero */
-        width: 90%;
-        max-width: 320px;
-        text-align: center;
-      }
-    }
-  </style>
-</head>
-<body>
-  <h1>Sopa de Letras Musical</h1>
-  <textarea id="words-source" style="display:none;">RITMO
-GUITARRA
-MELODIA
-NOTA
-CANCION
-ACORDE
-ARMONIA</textarea>
-
-  <div id="container">
-    <div>
-      <div id="board-container">
-        <div id="board"></div>
-      </div>
-      <div id="buttons">
-        <button onclick="captureBoard()">📸 Capturar</button>
-        <button onclick="sendToWhatsApp()">📲 Enviar por WhatsApp</button>
-      </div>
-      <div id="message">🎉 ¡Encontraste todas las palabras! 🎉</div>
-    </div>
-    <ul id="word-list"></ul>
-  </div>
-
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script>
-    let words = [];
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      const raw = document.getElementById("words-source").value;
-      words = raw.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-      initGame();
-    });
-
-    function initGame() {
-      const gridSize = 7;
-      const board = document.getElementById("board");
-      const wordList = document.getElementById("word-list");
-      const foundWords = new Set();
-      const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
-      let path = [];
-
-      function updateWordList() {
-        wordList.innerHTML = "";
-        words.forEach(word => {
-          const li = document.createElement("li");
-          li.textContent = word;
-          li.id = `word-${word}`;
-          if (foundWords.has(word)) li.classList.add("found-word");
-          wordList.appendChild(li);
-        });
-      }
-
-      function placeWord(word) {
-        const directions = [[1,0], [0,1], [1,1], [-1,1], [1,-1], [0,-1], [-1,-1], [-1,0]];
-        directions.sort(() => Math.random() - 0.5);
-        for (let [dx, dy] of directions) {
-          const startX = dx > 0 ? 0 : gridSize - 1;
-          const endX = dx > 0 ? gridSize - 1 : 0;
-          const startY = dy > 0 ? 0 : gridSize - 1;
-          const endY = dy > 0 ? gridSize - 1 : 0;
-
-          for (let y = startY; y !== endY + (dy || 1); y += (dy || 1)) {
-            for (let x = startX; x !== endX + (dx || 1); x += (dx || 1)) {
-              let canPlace = true;
-              for (let i = 0; i < word.length; i++) {
-                const nx = x + dx * i;
-                const ny = y + dy * i;
-                if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize || (grid[ny][nx] !== "" && grid[ny][nx] !== word[i])) {
-                  canPlace = false;
-                  break;
-                }
-              }
-              if (canPlace) {
-                for (let i = 0; i < word.length; i++) {
-                  const nx = x + dx * i;
-                  const ny = y + dy * i;
-                  grid[ny][nx] = word[i];
-                }
-                return;
-              }
-            }
-          }
-        }
-      }
-
-      words.forEach(placeWord);
-      updateWordList();
-
-      board.innerHTML = "";
-      for (let y = 0; y < gridSize; y++) {
-        for (let x = 0; x < gridSize; x++) {
-          if (grid[y][x] === "") {
-            grid[y][x] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-          }
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          cell.textContent = grid[y][x];
-          cell.dataset.x = x;
-          cell.dataset.y = y;
-          cell.addEventListener("click", () => handleClick(cell));
-          board.appendChild(cell);
-        }
-      }
-
-      function resetSelection() {
-        path.forEach(el => el.classList.remove("selected"));
-        path = [];
-      }
-
-      function getWordFromPath() {
-        return path.map(el => el.textContent).join("");
-      }
-      
-      function checkWord() {
-          const selectedWord = getWordFromPath();
-          const reversedWord = selectedWord.split('').reverse().join('');
-
-          let wordFound = null;
-
-          if (words.includes(selectedWord) && !foundWords.has(selectedWord)) {
-              wordFound = selectedWord;
-          } else if (words.includes(reversedWord) && !foundWords.has(reversedWord)) {
-              wordFound = reversedWord;
-          }
-
-          if (wordFound) {
-              path.forEach(el => el.classList.add("found"));
-              foundWords.add(wordFound);
-              document.getElementById(`word-${wordFound}`).classList.add("found-word");
-              if (foundWords.size === words.length) {
-                  document.getElementById("message").style.display = "block";
-                  document.getElementById("board-container").classList.add("win");
-                  confetti();
-              }
-          }
-          resetSelection();
-      }
-
-
-      function handleClick(cell) {
-        const index = path.indexOf(cell);
-        if (index > -1) { // Si la celda ya está seleccionada
-          if (index === path.length - 1) { // Y es la última, intenta validar la palabra
-            checkWord();
-          } else { // Si no, resetea la selección
-            resetSelection();
-          }
-          return;
-        }
-        
-        // Lógica para continuar una selección recta
-        if (path.length >= 2) {
-            const last = path[path.length - 1];
-            const secondLast = path[path.length - 2];
-            const dx = last.dataset.x - secondLast.dataset.x;
-            const dy = last.dataset.y - secondLast.dataset.y;
-            if (cell.dataset.x - last.dataset.x !== dx || cell.dataset.y - last.dataset.y !== dy) {
-                resetSelection();
-            }
-        }
-
-        cell.classList.add("selected");
-        path.push(cell);
-      }
-    }
-
-    // Funciones globales para botones
-    window.captureBoard = function () {
-      html2canvas(document.querySelector("#board-container")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = 'sopa-de-letras-musical.png';
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    };
-
-    window.sendToWhatsApp = function () {
-        const message = encodeURIComponent("¡He resuelto la sopa de letras musical!");
-        const url = `https://wa.me/?text=${message}`;
-        window.open(url, '_blank');
-    };
-  </script>
-</body>
-</html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Sopa de Letras 7×7 — Jungle</title>
+<style>
+  :root{
+    --size: 7;                 /* tamaño de la grilla */
+    --cell: clamp(38px, 8vw, 64px);
+    --accent: #0ea5e9;         /* celeste lindo */
+    --found: #16a34a;          /* verde encontrado */
+    --grid-gap: 6px;
+    --bg: #0b1020;
+    --panel: #111832;
+    --panel-2:#0f1530;
+    --text:#e7eefb;
+    --muted:#9fb1d3;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    background: radial-gradient(1200px 1200px at 10% -10%, #172046 0%, #0b1020 60%);
+    color: var(--text);
+    -webkit-user-select:none; user-select:none;
+    touch-action: none;
+  }
+  header{
+    padding: 16px 16px 0 16px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  }
+  header h1{font-size: clamp(18px,3.4vw,24px); margin:0 8px 0 0; letter-spacing:.5px}
+  .pill{font-size:12px; color:#cfe5ff; opacity:.8; border:1px solid #244; padding:4px 8px; border-radius:999px}
+  main{
+    padding: 16px;
+    display:grid; gap:16px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 880px){
+    main{grid-template-columns: 1fr minmax(280px, 360px);}
+  }
+  /* Grid */
+  .board{
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid #223153;
+    border-radius
