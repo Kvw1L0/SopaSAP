@@ -46,15 +46,10 @@
 
   /* SOPA DE LETRAS */
   #soup-container {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 500px;
     padding: 15px;
     background: transparent;
     border: 3px solid black;
     border-radius: 12px;
-    z-index: 5;
   }
 
   /* GRILLA */
@@ -110,7 +105,6 @@
     border-top: 4px solid black;
     padding: 12px 15px;
     box-sizing: border-box;
-    margin-top: calc(200px + 500px); /* se ajusta para quedar debajo de la sopa */
   }
 
   #clue-panel h3 {
@@ -166,6 +160,7 @@ let seleccion = [];
 let ultimaCelda = null;
 let completadas = [];
 
+/* === GRILLA === */
 function crearGrillaVacia() {
   grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(""));
 }
@@ -210,7 +205,6 @@ function llenarRandom() {
 function renderGrid() {
   const gridDiv = document.getElementById("grid");
   gridDiv.innerHTML = "";
-
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       const cell = document.createElement("div");
@@ -227,6 +221,7 @@ function renderGrid() {
   }
 }
 
+/* === SELECCIÓN === */
 function esAdyacente(c1, c2) {
   if (!c1 || !c2) return true;
   const dx = Math.abs(c1.x - c2.x);
@@ -263,7 +258,6 @@ function verificarPalabra() {
   for (const p of palabras) {
     if (cadena === p.palabra) {
       marcarCompletada(p.palabra);
-
       seleccion.forEach(c => {
         if (!completadas.find(cc => cc.x === c.x && cc.y === c.y)) {
           completadas.push({x: c.x, y: c.y});
@@ -273,7 +267,6 @@ function verificarPalabra() {
           c.div.style.animation = 'popGlow 0.4s ease-out';
         }
       });
-
       seleccion.forEach(c => c.div.classList.remove("selected"));
       seleccion = [];
       ultimaCelda = null;
@@ -287,6 +280,7 @@ function marcarCompletada(palabra) {
   if (li) li.classList.add("clue-done");
 }
 
+/* === PISTAS === */
 function renderPistas() {
   const ul = document.getElementById("clue-list");
   ul.innerHTML = "";
@@ -298,14 +292,8 @@ function renderPistas() {
   }
 }
 
-function ajustarSopa() {
-  const header = document.getElementById('header');
-  const soup = document.getElementById('soup-container');
-  const alturaHeader = header.offsetHeight;
-  soup.style.top = (alturaHeader + 50) + 'px';
-}
-
-window.addEventListener('load', () => {
+/* === INICIALIZACIÓN === */
+function iniciar() {
   crearGrillaVacia();
   palabras.forEach(p => {
     let ok = false;
@@ -314,10 +302,15 @@ window.addEventListener('load', () => {
   llenarRandom();
   renderGrid();
   renderPistas();
-  ajustarSopa();
-});
 
-window.addEventListener('resize', ajustarSopa);
+  // Ajusta margen del soup-container para que quede debajo del header
+  const header = document.getElementById('header');
+  const soup = document.getElementById('soup-container');
+  soup.style.marginTop = (header.offsetHeight + 50) + 'px';
+}
+
+window.addEventListener('load', iniciar);
+window.addEventListener('resize', iniciar);
 </script>
 
 </body>
